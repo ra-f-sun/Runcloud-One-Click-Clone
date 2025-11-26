@@ -70,11 +70,25 @@ class OCC_API {
         return $this->request( '/ping' );
     }
 
-    /**
-     * Helper: Get List of Servers
-     * Useful for your next step (Cloning interface)
-     */
-    public function get_servers() {
-        return $this->request( '/servers' );
-    }
+   /**
+	 * --- STEP 2: DISCOVERY METHODS ---
+	 */
+
+	public function get_servers() {
+		return $this->request( '/servers' );
+	}
+
+	public function get_webapps( $server_id, $search = '' ) {
+		$endpoint = '/servers/' . intval( $server_id ) . '/webapps';
+		if ( ! empty( $search ) ) {
+			$endpoint .= '?search=' . urlencode( $search );
+		}
+		return $this->request( $endpoint );
+	}
+
+	public function get_databases( $server_id ) {
+		return $this->request( '/servers/' . intval( $server_id ) . '/databases' );
+	}
+
+
 }
