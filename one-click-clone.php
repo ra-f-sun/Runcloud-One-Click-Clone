@@ -3,7 +3,7 @@
  * Plugin Name: One Click Clone (RunCloud)
  * Description: Automated WordPress staging and cloning via RunCloud API v3.
  * Version: 1.0.0
- * Author: Expert Dev
+ * Author: Rafsun Jani
  * Text Domain: one-click-clone
  */
 
