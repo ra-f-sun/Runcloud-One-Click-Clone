@@ -70,6 +70,29 @@ class OCC_API {
         return $this->request( '/ping' );
     }
 
+    /**
+	 * SECURITY: Rate Limiter
+	 * Prevents abuse by limiting "Write" operations (Clones) per hour.
+	 */
+	public function check_rate_limit() {
+		$limit = 5; // Maximum 5 clones per hour
+		$current_count = get_transient( 'occ_clone_count_hour' );
+
+		if ( $current_count !== false && $current_count >= $limit ) {
+			return new WP_Error( 'rate_limit', 'Hourly clone limit reached. Please wait.' );
+		}
+		return true;
+	}
+
+	public function increment_rate_limit() {
+		$current_count = get_transient( 'occ_clone_count_hour' );
+		if ( $current_count === false ) {
+			set_transient( 'occ_clone_count_hour', 1, HOUR_IN_SECONDS );
+		} else {
+			set_transient( 'occ_clone_count_hour', $current_count + 1, HOUR_IN_SECONDS );
+		}
+	}
+
    /**
 	 * --- STEP 2: DISCOVERY METHODS ---
 	 */

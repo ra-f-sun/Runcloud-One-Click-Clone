@@ -5,18 +5,26 @@ class OCC_Admin {
 	private $api;
 	private $encryption;
 	private $discovery;
+	private $ajax; // New property
 
 	public function __construct() {
 		$this->api = new OCC_API();
 		$this->encryption = new OCC_Encryption();
 		require_once OCC_PLUGIN_DIR . 'includes/class-occ-discovery.php';
 		$this->discovery = new OCC_Discovery();
+		
+		// Load AJAX
+		require_once OCC_PLUGIN_DIR . 'includes/class-occ-ajax.php';
+		$this->ajax = new OCC_Ajax();
 	}
 
 	public function run() {
 		add_action( 'admin_menu', [ $this, 'add_plugin_menu' ] );
 		add_action( 'admin_post_occ_save_settings', [ $this, 'handle_save_settings' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+		
+		// Register AJAX hooks
+		$this->ajax->register();
 	}
 
 	public function add_plugin_menu() {
@@ -25,7 +33,17 @@ class OCC_Admin {
 
 	public function enqueue_assets( $hook ) {
 		if ( 'toplevel_page_one-click-clone' !== $hook ) return;
+		
 		wp_enqueue_style( 'occ-admin-css', OCC_PLUGIN_URL . 'admin/css/occ-admin.css', [], OCC_VERSION );
+		
+		// Enqueue JS
+		wp_enqueue_script( 'occ-admin-js', OCC_PLUGIN_URL . 'admin/js/occ-admin.js', ['jquery'], OCC_VERSION, true );
+		
+		// Pass Data to JS
+		wp_localize_script( 'occ-admin-js', 'occVars', [
+			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'occ_clone_action' )
+		]);
 	}
 
 	public function display_main_page() {
@@ -44,8 +62,11 @@ class OCC_Admin {
 			$discovery_data = $token_exists ? $this->discovery->discover_environment() : null;
 			require_once OCC_PLUGIN_DIR . 'admin/partials/occ-settings-view.php';
 		} else {
-			echo '<div class="card"><h3>Clone Interface Coming in Step 3</h3></div>';
+			// We pass discovery data to pre-fill the form
+			$discovery_data = $token_exists ? $this->discovery->discover_environment() : null;
+			require_once OCC_PLUGIN_DIR . 'admin/partials/occ-clone-view.php';
 		}
+		
 		echo '</div>';
 	}
 
