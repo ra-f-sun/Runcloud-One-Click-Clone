@@ -1,7 +1,192 @@
+/* Container */
+.occ-wrap {
+  margin: 20px auto;
+  max-width: 650px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+/* Modern Card */
 .occ-card {
   background: #fff;
-  border: 1px solid #ccd0d4;
-  padding: 20px;
+  border: 1px solid #dcdcde;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header */
+.occ-header {
+  margin-bottom: 25px;
+  border-bottom: 1px solid #f0f0f1;
+  padding-bottom: 15px;
+}
+.occ-header h2 {
+  margin: 0 0 5px 0;
+  font-size: 24px;
+  color: #1d2327;
+}
+.occ-header p {
+  margin: 0;
+  color: #646970;
+  font-size: 14px;
+}
+
+/* Form Groups */
+.occ-field-group {
+  margin-bottom: 20px;
+}
+.occ-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1d2327;
+}
+.occ-input-full {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #8c8f94;
+  border-radius: 4px;
+}
+.occ-helper {
+  font-size: 12px;
+  color: #646970;
+  margin-top: 5px;
+}
+
+/* Input Group (for Subdomain + Suffix) */
+.occ-input-group {
+  display: flex;
+  align-items: stretch;
+}
+.occ-input-group input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: 0;
+  flex-grow: 1;
+}
+.occ-input-suffix {
+  background: #f0f0f1;
+  border: 1px solid #8c8f94;
+  border-left: 0;
+  color: #50575e;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  user-select: none;
+}
+
+/* Summary Grid */
+.occ-summary-box {
+  background: #f6f7f7;
+  border: 1px solid #c3c4c7;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+.occ-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+.occ-stat-item {
+  text-align: center;
+}
+.occ-stat-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #646970;
+  margin-bottom: 4px;
+}
+.occ-stat-value {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
+  color: #2271b1;
+}
+
+/* Buttons */
+.occ-actions {
+  margin-top: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.occ-btn-primary {
+  background: #2271b1;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.occ-btn-primary:hover {
+  background: #135e96;
+}
+.occ-btn-primary:disabled {
+  background: #a7aaad;
+  cursor: not-allowed;
+}
+
+/* Progress Bar (Hidden by default) */
+.occ-progress-container {
+  display: none;
   margin-top: 20px;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  background: #f0f0f1;
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+}
+.occ-progress-bar {
+  height: 100%;
+  background: #2271b1;
+  width: 0%;
+  transition: width 0.5s ease;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Notifications */
+#occ-response-area {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 4px solid;
+  display: none;
+}
+.occ-notice-success {
+  background: #edfaef;
+  border-color: #00a32a;
+  color: #005a15;
+}
+.occ-notice-error {
+  background: #fcf0f1;
+  border-color: #d63638;
+  color: #8a2424;
+}
+.occ-notice-info {
+  background: #f0f6fc;
+  border-color: #2271b1;
+  color: #1d2327;
 }

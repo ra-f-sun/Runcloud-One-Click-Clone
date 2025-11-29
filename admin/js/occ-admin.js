@@ -13,12 +13,16 @@ jQuery(document).ready(function ($) {
     var $form = $(this);
     var $btn = $form.find('button[type="submit"]');
     var $msg = $("#occ-response-area");
-    var $spinner = $form.find(".spinner");
+    var $progressCont = $(".occ-progress-container");
+    var $progressBar = $("#occ-progress-bar");
 
     // Reset UI
-    $msg.hide().removeClass("notice-error notice-success notice-warning");
+    $msg
+      .hide()
+      .removeClass("occ-notice-error occ-notice-success occ-notice-info");
     $btn.prop("disabled", true).text("Initiating...");
-    $spinner.addClass("is-active");
+    $progressCont.show();
+    $progressBar.css("width", "5%"); // Starting State
 
     var data = {
       action: "occ_clone_app",
@@ -31,39 +35,35 @@ jQuery(document).ready(function ($) {
       system_user_id: $("#system_user_id").val(),
     };
 
-    // Send Request
     $.post(occVars.ajaxurl, data, function (response) {
       if (response.success) {
-        // Success: Start Polling
+        // PHASE 2: POLLING
         $msg
-          .addClass("notice-warning")
+          .addClass("occ-notice-info")
           .html(
-            '<p><strong>Clone Initiated!</strong> RunCloud is working... <span id="occ-timer">0s</span></p>'
+            '<p><strong>Clone Initiated!</strong> RunCloud is provisioning... <span id="occ-timer">0s</span></p>'
           )
           .show();
-        $btn.text("Cloning in progress...").prop("disabled", true);
+        $btn.text("Cloning in progress...");
+        $progressBar.css("width", "20%"); // Jump to 20%
+
         startPolling(
           response.data.app_name,
           response.data.domain,
           data.server_id
         );
       } else {
-        // Logic Error (API returned 422/400)
-        stopSpinner("Error: " + (response.data || "Unknown error"));
+        stopError("Error: " + (response.data || "Unknown error"));
       }
     }).fail(function (xhr, status, error) {
-      // CRASH HANDLER: Catches 500 Fatal Errors
-      console.error(xhr.responseText); // Check Console for details
-      stopSpinner(
-        "System Error: " + error + ". Check browser console for details."
-      );
+      stopError("System Error: " + error);
     });
 
-    function stopSpinner(message) {
-      $spinner.removeClass("is-active");
+    function stopError(message) {
+      $progressCont.hide();
       $btn.prop("disabled", false).text("Clone Site");
       $msg
-        .addClass("notice-error")
+        .addClass("occ-notice-error")
         .html("<p>" + message + "</p>")
         .show();
     }
@@ -71,8 +71,15 @@ jQuery(document).ready(function ($) {
 
   function startPolling(appName, domain, serverId) {
     var elapsed = 0;
+    var progress = 20;
+
     var poller = setInterval(function () {
-      elapsed += 15;
+      elapsed += 10;
+      // Fake progress increment for visual feedback while waiting
+      if (progress < 90) {
+        progress += 5;
+      }
+      $("#occ-progress-bar").css("width", progress + "%");
       $("#occ-timer").text(elapsed + "s");
 
       $.post(
@@ -90,25 +97,29 @@ jQuery(document).ready(function ($) {
           }
         }
       );
-    }, 15000); // Check every 15s
+    }, 10000); // Check every 10s
   }
 
   function finishClone(domain) {
-    var url = "http://" + domain;
+    var url = "http://" + domain; // Or https if SSL worked immediately
     var $msg = $("#occ-response-area");
     var $btn = $("#occ-clone-form").find('button[type="submit"]');
-    var $spinner = $("#occ-clone-form").find(".spinner");
+    var $progressBar = $("#occ-progress-bar");
 
-    $spinner.removeClass("is-active");
-    $msg
-      .removeClass("notice-warning")
-      .addClass("notice-success")
-      .html(
-        '<p><strong>Success!</strong> Cloning complete.</p><p><a href="' +
-          url +
-          '" target="_blank" class="button button-primary">Visit New Site</a></p>'
-      );
+    $progressBar.css("width", "100%"); // Complete
 
-    $btn.text("Clone Complete");
+    // Wait a moment for the bar to fill before showing success
+    setTimeout(function () {
+      $msg
+        .removeClass("occ-notice-info")
+        .addClass("occ-notice-success")
+        .html(
+          '<p><strong>Success!</strong> Cloning complete.</p><p><a href="' +
+            url +
+            '" target="_blank" class="occ-btn-primary" style="display:inline-block; text-decoration:none; margin-top:10px;">Visit New Site &rarr;</a></p>'
+        );
+
+      $btn.text("Clone Complete").hide(); // Hide the form button, show the Visit button
+    }, 600);
   }
 });
