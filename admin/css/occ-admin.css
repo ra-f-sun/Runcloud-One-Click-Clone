@@ -190,3 +190,47 @@
   border-color: #2271b1;
   color: #1d2327;
 }
+
+/* Real-time Validation Styles */
+.occ-input-error {
+  border-color: #d63638 !important;
+  box-shadow: 0 0 2px rgba(214, 54, 56, 0.4);
+}
+
+.occ-input-error:focus {
+  border-color: #d63638 !important;
+  box-shadow: 0 0 0 1px #d63638 !important;
+}
+
+/* Ensure disabled button looks inactive */
+.occ-btn-primary:disabled,
+.occ-btn-disabled {
+  background: #a7aaad !important;
+  border-color: #dcdcde !important;
+  color: #fff !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Real-time Validation UI */
+.occ-input-error {
+  border-color: #d63638 !important;
+  box-shadow: 0 0 0 1px #d63638 !important;
+}
+
+.occ-error-text {
+  color: #d63638;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+  font-weight: 500;
+}
+
+/* Disabled button state */
+.occ-btn-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f0f0f1 !important;
+  color: #a7aaad !important;
+  border-color: #dcdcde !important;
+}

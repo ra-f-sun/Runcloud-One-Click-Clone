@@ -63,3 +63,21 @@ one-click-clone/
 │   └── class-occ-admin.php # Menu & Enqueue logic
 └── one-click-clone.php   # Plugin Bootstrap
 ```
+
+## 📝 Changelog
+
+**1.0.2**
+
+- **UX:** Added real-time validation to the cloning form.
+- **UX:** Replaced spinner with a progress bar and status summary grid.
+- **Fix:** Allowed hyphens (`-`) in subdomain generation.
+- **Fix:** Added error handling for missing CSS assets.
+
+**1.0.1**
+
+- **Security:** Added Rate Limiting to API requests.
+- **Fix:** Corrected Cloudflare toggle logic in AJAX handler.
+
+**1.0.0**
+
+- Initial Release.
