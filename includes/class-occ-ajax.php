@@ -20,37 +20,69 @@ class OCC_Ajax {
 		check_ajax_referer( 'occ_clone_action', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( 'Unauthorized' );
 
-		// 1. Security: Rate Limit
-		$limit_check = $this->api->check_rate_limit();
-		if ( is_wp_error( $limit_check ) ) {
-			wp_send_json_error( $limit_check->get_error_message() );
+		// 1. Rate Limit
+		if ( is_wp_error( $this->api->check_rate_limit() ) ) {
+			wp_send_json_error( 'Rate limit reached.' );
 		}
 
-		// 2. Sanitize Inputs
-		$input_name      = sanitize_text_field( $_POST['app_name'] ); // "staging"
-		$input_subdomain = sanitize_text_field( $_POST['app_subdomain'] ); // "staging"
+		// 2. Basic Inputs
 		$server_id       = intval( $_POST['server_id'] );
+		$input_name      = sanitize_text_field( $_POST['app_name'] );
+		$input_subdomain = sanitize_text_field( $_POST['app_subdomain'] );
 		$source_app_id   = intval( $_POST['source_app_id'] );
 		$source_db_id    = intval( $_POST['source_db_id'] );
 		
-		// 3. Configuration & Hardcoding
-		$suffix = get_option( 'occ_domain_suffix', '' );
-		$use_cf = get_option( 'occ_use_cloudflare', 0 );
-		$cf_id  = get_option( 'occ_cf_api_id', '' );
+		// 3. System User Logic (The New Part)
+		$user_mode = sanitize_text_field( $_POST['sys_user_mode'] ); // 'existing' or 'new'
+		$final_user_id = 0;
 
-		// 4. Construct Calculated Values
-		// Name: staging_TIMESTAMP (Unique)
-		$dest_name = $input_name . '_' . date( 'Ymd_Hi' );
-		
-		// Domain: staging + suffix
+		if ( 'new' === $user_mode ) {
+			// A. Create New User
+			$new_username = sanitize_text_field( $_POST['new_sys_user_name'] );
+			
+			// Validate username format (RunCloud strict rules: lowercase, numbers, no spaces)
+			if ( ! preg_match( '/^[a-z0-9]+$/', $new_username ) ) {
+				wp_send_json_error( 'System Username must be lowercase letters and numbers only.' );
+			}
+
+			// Generate strong password automatically
+			$password = wp_generate_password( 20, true, true );
+
+			$user_response = $this->api->create_system_user( $server_id, $new_username, $password );
+
+			if ( is_wp_error( $user_response ) ) {
+				wp_send_json_error( 'Failed to create User: ' . $user_response->get_error_message() );
+			}
+
+			// Success? Get the ID
+			if ( isset( $user_response['id'] ) ) {
+				$final_user_id = $user_response['id'];
+				// Invalidate cache so next load shows this user
+				$this->api->clear_user_cache( $server_id );
+			} else {
+				// Sometimes successful response structure varies, check message
+				wp_send_json_error( 'User creation failed. API response invalid.' );
+			}
+
+		} else {
+			// B. Use Existing
+			$final_user_id = intval( $_POST['system_user_id'] );
+		}
+
+		if ( empty( $final_user_id ) ) {
+			wp_send_json_error( 'Invalid System User ID.' );
+		}
+
+		// 4. Construct Clone Payload
+		$suffix      = get_option( 'occ_domain_suffix', '' );
+		$dest_name   = $input_name . '_' . date( 'Ymd_Hi' );
 		$dest_domain = $input_subdomain . $suffix;
-
-		// DB Name: staging_db (Cleaned)
+		
+		// DB Naming
 		$clean_sub = preg_replace( '/[^a-z0-9]/', '', strtolower( $input_subdomain ) );
-		$dest_db   = substr( $clean_sub, 0, 16 ) . '_db'; // Max length safety
-		$dest_user = substr( $clean_sub, 0, 10 ) . '_u' . rand(10,99); // Short user
+		$dest_db   = substr( $clean_sub, 0, 16 ) . '_db';
+		$dest_user = substr( $clean_sub, 0, 10 ) . '_u' . rand(10,99);
 
-		// 5. Build Payload
 		$payload = [
 			'destinationName'         => $dest_name,
 			'domainName'              => $dest_domain,
@@ -59,28 +91,31 @@ class OCC_Ajax {
 			'sourceDatabaseId'        => $source_db_id,
 			'databaseDestinationName' => $dest_db,
 			'newDatabaseUsername'     => $dest_user,
-			// Hardcoded Defaults
-			'user'                    => intval( $_POST['system_user_id'] ), // From hidden input
+			'user'                    => $final_user_id, // <--- Using the decided ID
 			'cloneNginxConfig'        => true,
 			'cloneRuncloudHub'        => false,
 			'cloneBackup'             => false,
 			'cloneModsec'             => false,
-			'proxy'                   => false, // Default off
+			'proxy'                   => false,
 		];
 
 		// Cloudflare Logic
+		$use_cf = get_option( 'occ_use_cloudflare', 0 );
+		$cf_id  = get_option( 'occ_cf_api_id', '' );
+		
 		if ( $use_cf && ! empty( $cf_id ) ) {
 			$payload['dnsProvider'] = 'cloudflare';
 			$payload['cfApiKeyId']  = intval( $cf_id );
-			$payload['proxy']       = true; // Orange Cloud
-			$payload['advancedSSL'] = true; // Use DNS-01 SSL
+			$payload['proxy']       = true;
+			$payload['advancedSSL'] = true;
 			$payload['autoSSL']     = true;
 		} else {
-			// No Cloudflare defaults
-			$payload['dnsProvider'] = 'none'; // Or 'none'
+			$payload['dnsProvider'] = 'none';
+			$payload['proxy']       = false;
+			$payload['autoSSL']     = true; 
 		}
 
-		// 6. Send Request
+		// 5. Send Request
 		$response = $this->api->request( 
 			"/servers/{$server_id}/webapps/{$source_app_id}/clone", 
 			'POST', 
@@ -91,14 +126,22 @@ class OCC_Ajax {
 			wp_send_json_error( $response->get_error_message() );
 		}
 
-		// Success! Increment counter and return the unique name for polling
 		$this->api->increment_rate_limit();
 		
-		wp_send_json_success( [
-			'message' => 'Clone initiated successfully.',
-			'app_name' => $dest_name, // Return this so JS can poll for it
+		// Prepare Data for Frontend
+		$success_data = [
+			'message'  => 'Clone initiated.',
+			'app_name' => $dest_name,
 			'domain'   => $dest_domain
-		] );
+		];
+
+		// IF we created a new user, pass the credentials back
+		if ( 'new' === $user_mode && isset( $new_username ) && isset( $password ) ) {
+			$success_data['new_sys_user'] = $new_username;
+			$success_data['new_sys_pass'] = $password;
+		}
+		
+		wp_send_json_success( $success_data );
 	}
 
 	/**

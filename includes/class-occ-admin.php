@@ -62,8 +62,17 @@ class OCC_Admin {
 			$discovery_data = $token_exists ? $this->discovery->discover_environment() : null;
 			require_once OCC_PLUGIN_DIR . 'admin/partials/occ-settings-view.php';
 		} else {
-			// We pass discovery data to pre-fill the form
+			// Step 3: Load Clone Interface
 			$discovery_data = $token_exists ? $this->discovery->discover_environment() : null;
+			
+			// NEW: Fetch System Users (if server ID is known)
+			$system_users = [];
+			if ( isset( $discovery_data['server_id'] ) ) {
+				$system_users = $this->api->get_system_users( $discovery_data['server_id'] );
+				// Handle API error gracefully (empty list)
+				if ( is_wp_error( $system_users ) ) $system_users = [];
+			}
+
 			require_once OCC_PLUGIN_DIR . 'admin/partials/occ-clone-view.php';
 		}
 		

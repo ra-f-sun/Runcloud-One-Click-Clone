@@ -64,20 +64,33 @@ one-click-clone/
 └── one-click-clone.php   # Plugin Bootstrap
 ```
 
-## 📝 Changelog
+## 📋 Changelog
 
-**1.0.2**
+### 1.1.0 (Current)
 
-- **UX:** Added real-time validation to the cloning form.
-- **UX:** Replaced spinner with a progress bar and status summary grid.
-- **Fix:** Allowed hyphens (`-`) in subdomain generation.
-- **Fix:** Added error handling for missing CSS assets.
+- **Feature: System User Management.** Added a toggle to assign the new Web App to an existing RunCloud System User or create a brand new one directly from the plugin.
+- **Feature: Credential Capture.** Successfully captures the auto-generated password for new System Users and displays it once upon successful cloning.
+- **UX: Safety Modal.** Added a "Confirm Cloning" modal to prevent accidental submissions.
+- **UX: Improved Feedback.** Success messages now distinctly highlight sensitive credentials (username/password) for immediate safe-keeping.
 
-**1.0.1**
+### 1.0.2
 
-- **Security:** Added Rate Limiting to API requests.
-- **Fix:** Corrected Cloudflare toggle logic in AJAX handler.
+- **UX: Real-time Validation.** The form now validates input instantly, providing inline error messages for invalid characters or short lengths.
+- **UX: Visual Overhaul.** Replaced the static table layout with a modern card design, input groups, and a summary grid.
+- **UX: Progress Animation.** Replaced the generic spinner with an animated progress bar that updates during the polling phase.
+- **Fix: Hyphen Support.** Updated regex logic to allow hyphens (`-`) in subdomain generation while maintaining strict sanitization.
+- **Fix: Asset Loading.** Added fallback logic to ensure CSS/JS assets load correctly even if the WordPress admin hook name varies.
 
-**1.0.0**
+### 1.0.1
 
-- Initial Release.
+- **Security: Rate Limiting.** Re-implemented the internal rate limiter (Max 5 requests/hour) to prevent API quota abuse.
+- **Fix: Cloudflare Logic.** Fixed a bug where disabling Cloudflare in settings still attempted to send invalid DNS provider data to the API. Now correctly defaults to `dnsProvider: none`.
+- **Fix: SSL Fallback.** Enabled `autoSSL` (HTTP-01) attempts even when Cloudflare is disabled.
+
+### 1.0.0
+
+- **Initial Release.**
+- **Core:** Automated cloning via RunCloud API v3 using Bearer Token authentication.
+- **Discovery:** Implemented "Path-based Discovery" to automatically detect Source Server ID, Web App ID, and Database ID based on the file system.
+- **Integration:** Optional Cloudflare integration to automate DNS (A Record), Proxy (Orange Cloud), and Advanced SSL (DNS-01).
+- **Architecture:** Native WordPress implementation using `admin-ajax.php` and Transients for caching.

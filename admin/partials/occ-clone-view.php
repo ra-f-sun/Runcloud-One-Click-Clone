@@ -36,9 +36,41 @@
 			</div>
 
 			<div class="occ-field-group">
-				<label for="system_user_id" class="occ-label">System User ID</label>
-				<input type="number" id="system_user_id" class="occ-input-full" placeholder="e.g. 1045" required>
-				<div class="occ-helper">The RunCloud System User ID that will own this app.</div>
+				<label class="occ-label">System User Assignment</label>
+				
+				<div style="margin-bottom: 10px;">
+					<label style="margin-right: 15px;">
+						<input type="radio" name="sys_user_mode" value="existing" checked> 
+						Select Existing
+					</label>
+					<label>
+						<input type="radio" name="sys_user_mode" value="new"> 
+						Create New User
+					</label>
+				</div>
+
+				<div id="wrapper-user-existing">
+					<select id="system_user_id" class="occ-input-full">
+						<option value="">-- Select a User --</option>
+						<?php if ( ! empty( $system_users ) ) : ?>
+							<?php foreach ( $system_users as $user ) : ?>
+								<option value="<?php echo esc_attr( $user['id'] ); ?>">
+									<?php echo esc_html( $user['username'] ); ?>
+								</option>
+							<?php endforeach; ?>
+						<?php else: ?>
+							<option value="" disabled>No users found (or API error)</option>
+						<?php endif; ?>
+					</select>
+					<div class="occ-helper">Select the owner of this web application.</div>
+				</div>
+
+				<div id="wrapper-user-new" style="display: none;">
+					<div class="occ-input-group">
+						<input type="text" id="new_sys_user_name" class="occ-input-full" placeholder="e.g. app-user">
+						<span class="occ-input-suffix">-user</span> </div>
+					<div class="occ-helper">New Linux user will be created. Password auto-generated.</div>
+				</div>
 			</div>
 
 			<div class="occ-summary-box">
@@ -68,5 +100,21 @@
 				<button type="submit" class="occ-btn-primary">Clone Site</button>
 			</div>
 		</form>
+	</div>
+	<div id="occ-confirm-modal" class="occ-modal-overlay">
+		<div class="occ-modal">
+			<div class="occ-modal-header">
+				<h3>Confirm Cloning</h3>
+			</div>
+			<div class="occ-modal-body">
+				<p>Are you sure you want to proceed?</p>
+				<p>This will create a new Web Application, Database, and System User (if selected) on your RunCloud server.</p>
+				<p><strong>Note:</strong> This process may take a few minutes.</p>
+			</div>
+			<div class="occ-modal-footer">
+				<button type="button" class="occ-btn-secondary" id="occ-modal-cancel">Cancel</button>
+				<button type="button" class="occ-btn-primary" id="occ-modal-confirm">Yes, Clone Site</button>
+			</div>
+		</div>
 	</div>
 </div>

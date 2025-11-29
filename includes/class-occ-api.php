@@ -113,5 +113,58 @@ class OCC_API {
 		return $this->request( '/servers/' . intval( $server_id ) . '/databases' );
 	}
 
+    /**
+	 * --- STEP 4: SYSTEM USER MANAGEMENT ---
+	 */
+
+	/**
+	 * Get System Users (Cached)
+	 * Uses Transients to respect rate limits.
+	 */
+	public function get_system_users( $server_id ) {
+		$cache_key = 'occ_sys_users_' . $server_id;
+		$cached    = get_transient( $cache_key );
+
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		// Fetch from API
+		$response = $this->request( '/servers/' . intval( $server_id ) . '/users' );
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		// Cache for 15 minutes
+		if ( isset( $response['data'] ) ) {
+			set_transient( $cache_key, $response['data'], 15 * MINUTE_IN_SECONDS );
+			return $response['data'];
+		}
+
+		return [];
+	}
+
+	/**
+	 * Clear System User Cache
+	 * Call this after creating a new user so the list updates.
+	 */
+	public function clear_user_cache( $server_id ) {
+		delete_transient( 'occ_sys_users_' . $server_id );
+	}
+
+	/**
+	 * Create New System User
+	 */
+	public function create_system_user( $server_id, $username, $password ) {
+		return $this->request( 
+			'/servers/' . intval( $server_id ) . '/users', 
+			'POST', 
+			[
+				'username' => $username,
+				'password' => $password
+			]
+		);
+	}
 
 }
