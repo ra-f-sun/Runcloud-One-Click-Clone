@@ -16,6 +16,9 @@ class OCC_Admin {
 		// Load AJAX
 		require_once OCC_PLUGIN_DIR . 'includes/class-occ-ajax.php';
 		$this->ajax = new OCC_Ajax();
+
+		require_once OCC_PLUGIN_DIR . 'includes/class-occ-lists.php';
+		$this->lists = new OCC_Lists();
 	}
 
 	public function run() {
@@ -39,11 +42,25 @@ class OCC_Admin {
 		// Enqueue JS
 		wp_enqueue_script( 'occ-admin-js', OCC_PLUGIN_URL . 'admin/js/occ-admin.js', ['jquery'], OCC_VERSION, true );
 		
-		// Pass Data to JS
-		wp_localize_script( 'occ-admin-js', 'occVars', [
+		// 1. Fetch Lists (If we know the Server ID)
+		// We need to look up the server ID same way Discovery does, or grab it from a saved option if we had one.
+		// For robustness, we re-run discovery quickly or rely on the cached discovery data if possible.
+		// A simpler way: We pass an empty array initially, and let the View inject it via wp_localize_script logic 
+		// BUT wp_localize_script runs before the View. 
+		// SOLUTION: We move the list fetching logic inside 'display_main_page' and use a specialized inline script or 
+		// re-localize in the footer. For simplicity, we will pass it in enqueue if we can, 
+        // but since Server ID comes from Discovery (which runs in display), let's handle it in the View.
+        
+        // Base Vars
+		$script_data = [
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'occ_clone_action' )
-		]);
+			'nonce'   => wp_create_nonce( 'occ_clone_action' ),
+            'unavailable' => [] // Default empty
+		];
+        
+        // We will inject the real data in the footer view
+		wp_localize_script( 'occ-admin-js', 'occVars', $script_data );
+	
 	}
 
 	public function display_main_page() {
@@ -65,15 +82,20 @@ class OCC_Admin {
 			// Step 3: Load Clone Interface
 			$discovery_data = $token_exists ? $this->discovery->discover_environment() : null;
 			
-			// NEW: Fetch System Users (if server ID is known)
-			$system_users = [];
-			if ( isset( $discovery_data['server_id'] ) ) {
-				$system_users = $this->api->get_system_users( $discovery_data['server_id'] );
-				// Handle API error gracefully (empty list)
-				if ( is_wp_error( $system_users ) ) $system_users = [];
-			}
+			// Fetch System Users
+            $system_users = [];
+            if ( isset( $discovery_data['server_id'] ) ) {
+                $system_users = $this->api->get_system_users( $discovery_data['server_id'] );
+                if ( is_wp_error( $system_users ) ) $system_users = [];
+                
+                // NEW v1.2.0: Fetch Unavailable Names
+                $unavailable = $this->lists->get_unavailable_names( $discovery_data['server_id'] );
+                
+                // Inject into JS scope
+                echo '<script>window.occ_unavailable_names = ' . json_encode($unavailable) . ';</script>';
+            }
 
-			require_once OCC_PLUGIN_DIR . 'admin/partials/occ-clone-view.php';
+            require_once OCC_PLUGIN_DIR . 'admin/partials/occ-clone-view.php';
 		}
 		
 		echo '</div>';

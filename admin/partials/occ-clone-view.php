@@ -22,7 +22,7 @@
 			<div class="occ-field-group">
 				<label for="app_name" class="occ-label">New Application Name</label>
 				<input type="text" id="app_name" class="occ-input-full" placeholder="e.g. feature-test" required>
-				<div class="occ-helper">Internal identifier. A timestamp will be appended automatically.</div>
+				<div class="occ-helper">Internal identifier.</div>
 			</div>
 
 			<div class="occ-field-group">
@@ -35,71 +35,76 @@
 				</div>
 			</div>
 
-			<div class="occ-field-group">
-				<label class="occ-label">System User Assignment</label>
+			<div class="occ-field-group" style="background: #fcfcfc; padding: 15px; border: 1px solid #f0f0f1; border-radius: 4px;">
+				<label class="occ-label">Database Configuration</label>
 				
-				<div style="margin-bottom: 10px;">
-					<label style="margin-right: 15px;">
-						<input type="radio" name="sys_user_mode" value="existing" checked> 
-						Select Existing
-					</label>
-					<label>
-						<input type="radio" name="sys_user_mode" value="new"> 
-						Create New User
-					</label>
+				<div style="margin-bottom: 15px;">
+					<label for="db_name" style="font-size:12px; font-weight:600; color:#646970;">Database Name</label>
+					<div class="occ-input-group">
+						<input type="text" id="db_name" class="occ-input-full" required maxlength="64">
+						<span class="occ-input-suffix">_db</span>
+					</div>
 				</div>
 
+				<div>
+					<label for="db_user" style="font-size:12px; font-weight:600; color:#646970;">Database User</label>
+					<div class="occ-input-group">
+						<input type="text" id="db_user" class="occ-input-full" required maxlength="32">
+						<span class="occ-input-suffix">_u</span>
+					</div>
+					<div class="occ-helper">Max 32 characters. Alphanumeric only.</div>
+				</div>
+			</div>
+
+			<div class="occ-field-group">
+				<label class="occ-label">System User Assignment</label>
+				<div style="margin-bottom: 10px;">
+					<label style="margin-right: 15px;"><input type="radio" name="sys_user_mode" value="existing" checked> Select Existing</label>
+					<label><input type="radio" name="sys_user_mode" value="new"> Create New User</label>
+				</div>
+				
 				<div id="wrapper-user-existing">
 					<select id="system_user_id" class="occ-input-full">
 						<option value="">-- Select a User --</option>
-						<?php if ( ! empty( $system_users ) ) : ?>
-							<?php foreach ( $system_users as $user ) : ?>
-								<option value="<?php echo esc_attr( $user['id'] ); ?>">
-									<?php echo esc_html( $user['username'] ); ?>
-								</option>
-							<?php endforeach; ?>
-						<?php else: ?>
-							<option value="" disabled>No users found (or API error)</option>
-						<?php endif; ?>
+						<?php if ( ! empty( $system_users ) ) : foreach ( $system_users as $user ) : ?>
+							<option value="<?php echo esc_attr( $user['id'] ); ?>"><?php echo esc_html( $user['username'] ); ?></option>
+						<?php endforeach; endif; ?>
 					</select>
-					<div class="occ-helper">Select the owner of this web application.</div>
 				</div>
 
 				<div id="wrapper-user-new" style="display: none;">
 					<div class="occ-input-group">
-						<input type="text" id="new_sys_user_name" class="occ-input-full" placeholder="e.g. app-user">
-						<span class="occ-input-suffix">-user</span> </div>
-					<div class="occ-helper">New Linux user will be created. Password auto-generated.</div>
-				</div>
-			</div>
-
-			<div class="occ-summary-box">
-				<div class="occ-summary-grid">
-					<div class="occ-stat-item">
-						<span class="occ-stat-label">Source Server</span>
-						<span class="occ-stat-value"><?php echo $server_id ?: '-'; ?></span>
-					</div>
-					<div class="occ-stat-item">
-						<span class="occ-stat-label">Source App</span>
-						<span class="occ-stat-value"><?php echo $app_id ?: '-'; ?></span>
-					</div>
-					<div class="occ-stat-item">
-						<span class="occ-stat-label">Cloudflare</span>
-						<span class="occ-stat-value"><?php echo $cf_status; ?></span>
+						<input type="text" id="new_sys_user_name" class="occ-input-full" placeholder="appuser">
+						<span class="occ-input-suffix">-user</span>
 					</div>
 				</div>
 			</div>
 
 			<div id="occ-response-area"></div>
-			
-			<div class="occ-progress-container">
-				<div class="occ-progress-bar" id="occ-progress-bar"></div>
-			</div>
-
-			<div class="occ-actions">
-				<button type="submit" class="occ-btn-primary">Clone Site</button>
-			</div>
+			<div class="occ-progress-container"><div class="occ-progress-bar" id="occ-progress-bar"></div></div>
+			<div class="occ-actions"><button type="submit" class="occ-btn-primary">Clone Site</button></div>
 		</form>
+
+        <div style="margin-top: 40px;">
+            <h3>Reserved Names Reference</h3>
+            <p style="font-size: 13px; color: #666;">These names are already in use on this server.</p>
+            
+            <div class="occ-tabs" style="border-bottom: 1px solid #ccc; margin-bottom: 10px;">
+                <button type="button" class="occ-tab-btn active" onclick="openTab('tab-apps')">Web Apps</button>
+                <button type="button" class="occ-tab-btn" onclick="openTab('tab-dbs')">Databases</button>
+                <button type="button" class="occ-tab-btn" onclick="openTab('tab-users')">DB Users</button>
+            </div>
+
+            <div id="tab-apps" class="occ-tab-content active">
+                <textarea readonly class="occ-list-area"><?php echo isset($unavailable['apps']) ? implode("\n", $unavailable['apps']) : 'Loading...'; ?></textarea>
+            </div>
+            <div id="tab-dbs" class="occ-tab-content">
+                <textarea readonly class="occ-list-area"><?php echo isset($unavailable['dbs']) ? implode("\n", $unavailable['dbs']) : ''; ?></textarea>
+            </div>
+            <div id="tab-users" class="occ-tab-content">
+                <textarea readonly class="occ-list-area"><?php echo isset($unavailable['db_users']) ? implode("\n", $unavailable['db_users']) : ''; ?></textarea>
+            </div>
+        </div>
 	</div>
 	<div id="occ-confirm-modal" class="occ-modal-overlay">
 		<div class="occ-modal">

@@ -78,10 +78,13 @@ class OCC_Ajax {
 		$dest_name   = $input_name . '_' . date( 'Ymd_Hi' );
 		$dest_domain = $input_subdomain . $suffix;
 		
-		// DB Naming
-		$clean_sub = preg_replace( '/[^a-z0-9]/', '', strtolower( $input_subdomain ) );
-		$dest_db   = substr( $clean_sub, 0, 16 ) . '_db';
-		$dest_user = substr( $clean_sub, 0, 10 ) . '_u' . rand(10,99);
+		// NEW v1.2.0: Manual DB Inputs
+        // Note: We append the hardcoded suffixes here to match the frontend visual
+        $input_db_name = sanitize_text_field( $_POST['db_name_custom'] );
+        $input_db_user = sanitize_text_field( $_POST['db_user_custom'] );
+        
+		$dest_db   = $input_db_name . '_db';
+		$dest_user = $input_db_user . '_u'; // Append suffix
 
 		$payload = [
 			'destinationName'         => $dest_name,

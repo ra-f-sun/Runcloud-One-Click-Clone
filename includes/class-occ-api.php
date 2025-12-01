@@ -94,25 +94,48 @@ class OCC_API {
 	}
 
    /**
-	 * --- STEP 2: DISCOVERY METHODS ---
+	 * --- STEP 2 & PHASE 2: DISCOVERY & LIST METHODS ---
 	 */
 
 	public function get_servers() {
 		return $this->request( '/servers' );
 	}
 
-	public function get_webapps( $server_id, $search = '' ) {
-		$endpoint = '/servers/' . intval( $server_id ) . '/webapps';
+	/**
+	 * Get Web Apps (Updated for v1.2.0 with Pagination)
+	 * @param int $server_id
+	 * @param string $search Optional search term
+	 * @param int $page Page number (Default 1)
+	 */
+	public function get_webapps( $server_id, $search = '', $page = 1 ) {
+		$endpoint = '/servers/' . intval( $server_id ) . '/webapps?page=' . intval( $page );
+		
+		// RunCloud allows perPage param (usually max 50), let's try to maximize it
+		$endpoint .= '&perPage=50'; 
+
 		if ( ! empty( $search ) ) {
-			$endpoint .= '?search=' . urlencode( $search );
+			$endpoint .= '&search=' . urlencode( $search );
 		}
 		return $this->request( $endpoint );
 	}
 
-	public function get_databases( $server_id ) {
-		return $this->request( '/servers/' . intval( $server_id ) . '/databases' );
+	/**
+	 * Get Databases (Updated for v1.2.0 with Pagination)
+	 */
+	public function get_databases( $server_id, $page = 1 ) {
+		return $this->request( 
+			'/servers/' . intval( $server_id ) . '/databases?page=' . intval( $page ) . '&perPage=50' 
+		);
 	}
-
+	
+	/**
+	 * Get Database Users (New for v1.2.0)
+	 */
+	public function get_database_users( $server_id, $page = 1 ) {
+		return $this->request( 
+			'/servers/' . intval( $server_id ) . '/databaseusers?page=' . intval( $page ) . '&perPage=50' 
+		);
+	}
     /**
 	 * --- STEP 4: SYSTEM USER MANAGEMENT ---
 	 */

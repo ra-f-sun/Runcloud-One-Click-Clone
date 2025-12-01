@@ -99,3 +99,22 @@ jQuery(document).ready(function($){
 	$('#use_cloudflare').change(toggleCF);
 });
 </script>
+
+<?php
+// v1.2.0 Debug: Test List Fetching
+if ( isset( $_GET['debug_lists'] ) && get_option('occ_rc_api_token') ) {
+    $lists = new OCC_Lists();
+    // Use the discovery ID if available, otherwise 0
+    $sid = isset($discovery_data['server_id']) ? $discovery_data['server_id'] : 0;
+    
+    echo '<div class="card" style="background:#fff; margin-top:20px;"><h3>Debug: Unavailable Names</h3>';
+    if($sid) {
+        $names = $lists->get_unavailable_names($sid);
+        echo '<pre>' . print_r($names, true) . '</pre>';
+        echo '<p><em>Note: If you see this list, Caching & Pagination are working.</em></p>';
+    } else {
+        echo 'Run Discovery first to get Server ID.';
+    }
+    echo '</div>';
+}
+?>
